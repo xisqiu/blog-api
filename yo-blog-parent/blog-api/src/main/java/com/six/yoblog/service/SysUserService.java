@@ -21,4 +21,12 @@ public interface SysUserService {
      * @return
      */
     Result findUserByToken(String token);
+
+    /**
+     * 添加用户信息
+     * @param sysUser
+     */
+    void save(SysUser sysUser);
+
+    SysUser findUserByAccount(String account);
 }

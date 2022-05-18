@@ -1,6 +1,7 @@
 package com.six.yoblog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.six.yoblog.dao.mapper.SysUserMapper;
 import com.six.yoblog.dao.pojo.SysUser;
 import com.six.yoblog.service.LoginService;
@@ -61,5 +62,19 @@ public class SysUserServiceImpl implements SysUserService {
         loginUserVO.setId(sysUser.getId());
         loginUserVO.setNickname(sysUser.getNickname());
         return Result.success(loginUserVO);
+    }
+
+    @Override
+    public void save(SysUser sysUser) {
+        //注意 默认生成的id 是分布式id 采用了雪花算法
+        this.sysUserMapper.insert(sysUser);
+    }
+
+    @Override
+    public SysUser findUserByAccount(String account) {
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysUser::getAccount,account);
+        queryWrapper.last("limit 1");
+        return sysUserMapper.selectOne(queryWrapper);
     }
 }
