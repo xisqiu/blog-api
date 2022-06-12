@@ -6,10 +6,7 @@ import com.six.yoblog.vo.ArticleVo;
 import com.six.yoblog.vo.params.PageParams;
 import com.six.yoblog.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -20,6 +17,7 @@ public class ArticleController {
 
     @Autowired
     private ArticleService articleService;
+
     /**
      * 首页文章列表
      * @param pageParams
@@ -60,4 +58,11 @@ public class ArticleController {
         return articleService.listArchives();
     }
 
+    /**
+     * 文章详情
+     */
+    @PostMapping("view/{id}")
+    public Result findArticleById(@PathVariable("id") Long articleId) {
+        return  articleService.findArticleById(articleId);
+    }
 }

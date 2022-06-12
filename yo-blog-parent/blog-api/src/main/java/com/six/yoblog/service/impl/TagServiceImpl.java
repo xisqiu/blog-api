@@ -46,7 +46,7 @@ public class TagServiceImpl implements TagService {
          * 1. 标签所拥有的文章数量最多 最热标签
          * 2. 查询 根据tag_id 分组从大到小排列 取前2个
          */
-         List<Long> tagIds = tagMapper.findHotsTagIds(limit);
+        List<Long> tagIds = tagMapper.findHotsTagIds(limit);
         if (CollectionUtils.isEmpty(tagIds)){
             return Result.success(Collections.emptyList());
         }

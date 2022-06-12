@@ -5,11 +5,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.six.yoblog.dao.dos.Archives;
+import com.six.yoblog.dao.mapper.ArticleBodyMapper;
 import com.six.yoblog.dao.mapper.ArticleMapper;
 import com.six.yoblog.dao.pojo.Article;
-import com.six.yoblog.service.ArticleService;
-import com.six.yoblog.service.SysUserService;
-import com.six.yoblog.service.TagService;
+import com.six.yoblog.dao.pojo.ArticleBody;
+import com.six.yoblog.service.*;
+import com.six.yoblog.vo.ArticleBodyVo;
 import com.six.yoblog.vo.ArticleVo;
 import com.six.yoblog.vo.Result;
 import com.six.yoblog.vo.params.PageParams;
@@ -57,12 +58,21 @@ public class ArticleServiceImpl implements ArticleService {
     private List<ArticleVo> copyList(List<Article> records, boolean isTag, boolean isAuthor) {
         List<ArticleVo> articleVoList = new ArrayList<>();
         for (Article record : records) {
-            articleVoList.add(copy(record, isTag, isAuthor));
+            articleVoList.add(copy(record, isTag, isAuthor,false,false));
         }
         return articleVoList;
     }
 
-    private ArticleVo copy(Article article, boolean isTag, boolean isAuthor) {
+    // 由于copylist 用于了其他地方，下面对copulist方法进行重载，重新传参
+    private List<ArticleVo> copyList(List<Article> records, boolean isTag, boolean isAuthor,boolean isBody, boolean isCategory) {
+        List<ArticleVo> articleVoList = new ArrayList<>();
+        for (Article record : records) {
+            articleVoList.add(copy(record, isTag, isAuthor,isBody,isCategory));
+        }
+        return articleVoList;
+    }
+
+    private ArticleVo copy(Article article, boolean isTag, boolean isAuthor, boolean isBody, boolean isCategory) {
         ArticleVo articleVo = new ArticleVo();
         BeanUtils.copyProperties(article, articleVo);
         articleVo.setCreateDate(new DateTime(article.getCreateDate()).toString("yyyy-MM-dd HH:mm"));
@@ -75,7 +85,28 @@ public class ArticleServiceImpl implements ArticleService {
             Long authorid = article.getAuthorId();
             articleVo.setAuthor(sysUserService.findUserByid(authorid).getNickname());
         }
+        if (isBody){
+            Long bodyId = article.getBodyId();
+            articleVo.setBody(findArticleBodyById(bodyId));
+        }
+        if (isCategory){
+            Long categoryId = article.getCategoryId();
+            articleVo.setCategory(categoryService.findCategoryByid(categoryId));
+        }
         return articleVo;
+    }
+
+    @Autowired
+    private CategoryService categoryService;
+
+
+    @Autowired
+    private ArticleBodyMapper articleBodyMapper;
+    private ArticleBodyVo findArticleBodyById(Long bodyId) {
+        ArticleBody articleBody = articleBodyMapper.selectById(bodyId);
+        ArticleBodyVo articleBodyVo = new ArticleBodyVo();
+        articleBodyVo.setContent(articleBody.getContent());
+        return articleBodyVo;
     }
 
     @Override
@@ -104,5 +135,26 @@ public class ArticleServiceImpl implements ArticleService {
     public Result listArchives() {
         List<Archives> archivesList = articleMapper.listArchives();
         return Result.success(archivesList);
+    }
+
+    @Autowired
+    private ThreadService threadService;
+
+    @Override
+    public Result findArticleById(Long articleId){
+        /**
+         * 1.根据id查询文章信息
+         * 2.根据bodyid 和 categoryid 去做关联查询
+         */
+        Article article = this.articleMapper.selectById(articleId);
+        ArticleVo articleVo = copy(article, true, true,true,true);
+        /**
+         * 查看完文章后，新增阅读数，
+         * 查看文章后，本应该返回数据了,这时候做了一个更新操作，更新时间加写锁，阻塞其他的读操作，性能就会比较低了
+         * 更新 增加了此次接口的耗时，如果一旦更新出现问题，不能影响 查看文章的操作
+         * 线程池 可以把更新操作 扔到线程池中去执行和主线程就不相关了
+         */
+        threadService.updateArticleViewCount(articleMapper,article);
+        return Result.success(articleVo) ;
     }
 }

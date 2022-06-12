@@ -20,6 +20,6 @@ public class TagsController {
     @RequestMapping("/hot")
     public Result listHotTags(){
         int limit =6;
-         return tagService.hots(limit);
+        return tagService.hots(limit);
     }
 }

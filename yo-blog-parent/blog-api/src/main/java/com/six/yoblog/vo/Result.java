@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Result {
+public class  Result {
     private boolean success;
 
     private Integer code;
@@ -16,10 +16,10 @@ public class Result {
 
     private Object data;
 
-
     public static Result success(Object data) {
         return new Result(true,200,"success",data);
     }
+
     public static Result fail(Integer code, String msg) {
         return new Result(false,code,msg,null);
     }
