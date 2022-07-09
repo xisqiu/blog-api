@@ -9,8 +9,10 @@ import com.six.yoblog.service.SysUserService;
 import com.six.yoblog.vo.ErrorCode;
 import com.six.yoblog.vo.LoginUserVO;
 import com.six.yoblog.vo.Result;
+import com.six.yoblog.vo.UserVo;
 import io.netty.util.internal.StringUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,19 @@ public class SysUserServiceImpl implements SysUserService {
 
     @Autowired
     private LoginService loginService;
+
+    @Override
+    public UserVo findUservcVoById(Long id) {
+        SysUser sysUser = sysUserMapper.selectById(id);
+        if (sysUser==null){
+            sysUser = new SysUser();
+            sysUser.setId(1l);
+            sysUser.setNickname("站长亲起");
+        }
+        UserVo userVo = new UserVo();
+        BeanUtils.copyProperties(sysUser,userVo);
+        return userVo;
+    }
 
     @Override
     public SysUser findUserByid(Long id) {

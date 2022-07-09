@@ -2,6 +2,7 @@ package com.six.yoblog.service;
 
 import com.six.yoblog.dao.pojo.SysUser;
 import com.six.yoblog.vo.Result;
+import com.six.yoblog.vo.UserVo;
 
 public interface SysUserService {
 
@@ -29,4 +30,6 @@ public interface SysUserService {
     void save(SysUser sysUser);
 
     SysUser findUserByAccount(String account);
+
+    UserVo findUservcVoById(Long authorid);
 }
