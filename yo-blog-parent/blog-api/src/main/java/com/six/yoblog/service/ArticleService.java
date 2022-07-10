@@ -2,6 +2,7 @@ package com.six.yoblog.service;
 
 import com.six.yoblog.vo.ArticleVo;
 import com.six.yoblog.vo.Result;
+import com.six.yoblog.vo.params.ArticleParam;
 import com.six.yoblog.vo.params.PageParams;
 
 import java.util.List;
@@ -42,4 +43,11 @@ public interface ArticleService {
      * @return
      */
     Result findArticleById(Long id);
+
+    /**
+     * 发布文章
+     * @param articleParam
+     * @return
+     */
+    Result publish(ArticleParam articleParam);
 }

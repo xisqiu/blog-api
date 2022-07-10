@@ -1,5 +1,7 @@
 package com.six.yoblog.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.six.yoblog.dao.mapper.TagMapper;
 import com.six.yoblog.dao.pojo.Tag;
 import com.six.yoblog.service.TagService;
@@ -54,5 +56,11 @@ public class TagServiceImpl implements TagService {
         // select * from tag where id in(1,2,3,4)
         List<Tag> tagList = tagMapper.findTagsByTagIds(tagIds);
         return Result.success(tagList);
+    }
+
+    @Override
+    public Result findAll() {
+        List<Tag> tagList = this.tagMapper.selectList(new QueryWrapper<>());
+        return Result.success(copyList(tagList));
     }
 }

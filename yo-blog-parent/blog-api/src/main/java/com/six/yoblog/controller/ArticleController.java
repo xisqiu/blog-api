@@ -3,6 +3,7 @@ package com.six.yoblog.controller;
 import com.six.yoblog.dao.pojo.Article;
 import com.six.yoblog.service.ArticleService;
 import com.six.yoblog.vo.ArticleVo;
+import com.six.yoblog.vo.params.ArticleParam;
 import com.six.yoblog.vo.params.PageParams;
 import com.six.yoblog.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,5 +65,13 @@ public class ArticleController {
     @PostMapping("view/{id}")
     public Result findArticleById(@PathVariable("id") Long articleId) {
         return  articleService.findArticleById(articleId);
+    }
+
+    /**
+     * 文章发布
+     */
+    @PostMapping("publish")
+    public Result publish(@RequestBody ArticleParam articleParam){
+        return articleService.publish(articleParam);
     }
 }

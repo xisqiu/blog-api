@@ -7,18 +7,22 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.six.yoblog.dao.dos.Archives;
 import com.six.yoblog.dao.mapper.ArticleBodyMapper;
 import com.six.yoblog.dao.mapper.ArticleMapper;
-import com.six.yoblog.dao.pojo.Article;
-import com.six.yoblog.dao.pojo.ArticleBody;
+import com.six.yoblog.dao.mapper.ArticleTagMapper;
+import com.six.yoblog.dao.pojo.*;
 import com.six.yoblog.service.*;
+import com.six.yoblog.until.UserThreadLocal;
 import com.six.yoblog.vo.ArticleBodyVo;
 import com.six.yoblog.vo.ArticleVo;
 import com.six.yoblog.vo.Result;
+import com.six.yoblog.vo.TagVo;
+import com.six.yoblog.vo.params.ArticleParam;
 import com.six.yoblog.vo.params.PageParams;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +38,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Autowired
     private SysUserService sysUserService;
+
+    @Autowired(required = false)
+    private ArticleTagMapper articleTagMapper;
 
     /*
      * 1. 分页查询 artile文章列表
@@ -100,8 +107,9 @@ public class ArticleServiceImpl implements ArticleService {
     private CategoryService categoryService;
 
 
-    @Autowired
+    @Autowired(required = false)
     private ArticleBodyMapper articleBodyMapper;
+
     private ArticleBodyVo findArticleBodyById(Long bodyId) {
         ArticleBody articleBody = articleBodyMapper.selectById(bodyId);
         ArticleBodyVo articleBodyVo = new ArticleBodyVo();
@@ -156,5 +164,45 @@ public class ArticleServiceImpl implements ArticleService {
          */
         threadService.updateArticleViewCount(articleMapper,article);
         return Result.success(articleVo) ;
+    }
+
+    @Override
+    @Transactional
+    public Result publish(ArticleParam articleParam) {
+        // 从线程中获取缓存的用户信息，发布前进行登录验证
+        SysUser sysUser = UserThreadLocal.get();
+        Article article = new Article();
+        article.setAuthorId(sysUser.getId());
+        article.setCategoryId(articleParam.getCategory().getId());
+        article.setCreateDate(System.currentTimeMillis());
+        article.setCommentCounts(0);
+        article.setSummary(articleParam.getSummary());
+        article.setTitle(articleParam.getTitle());
+        article.setViewCounts(0);
+        article.setWeight(Article.Article_Common);
+        article.setBodyId(-1L);
+        this.articleMapper.insert(article);
+
+        List<TagVo> tags = new ArrayList<>();
+        if (tags != null){
+            for (TagVo tag : tags) {
+                ArticleTag articleTag = new ArticleTag();
+                articleTag.setArticleId(article.getId());
+                articleTag.setTagId(tag.getId());
+                this.articleTagMapper.insert(articleTag);
+            }
+        }
+
+        ArticleBody articleBody = new ArticleBody();
+        articleBody.setContent(articleParam.getBody().getContent());
+        articleBody.setContentHtml(articleParam.getBody().getContentHtml());
+        articleBody.setArticleId(article.getId());
+        articleBodyMapper.insert(articleBody);
+        article.setBodyId(articleBody.getId());
+        articleMapper.updateById(article);
+
+        ArticleVo articleVo = new ArticleVo();
+        articleVo.setId(article.getId());
+        return Result.success(articleVo);
     }
 }
